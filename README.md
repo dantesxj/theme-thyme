@@ -44,10 +44,10 @@ When you hit the Randomize button, the engine:
 
 ## 💻 Installation
 
-To install
+To install download the latest release from the releases page on this github.
 
-1. Navigate to the Plugins page by using ctrl or cmd + p and searching for plugins.
+1. Navigate to the Plugins page in thymer by using ctrl or cmd + p and searching for plugins.
 2. Click create plugin
-3. Copy the contents of `plugin.json` under the configuration tab.
-4. Copy the contents of `plugin.ts` from the dist folder (build) into custom code.
+3. Copy the contents of `plugin.json` from your downloaded file and paste under the configuration tab.
+4. Copy the contents of `plugin.ts` from your downloaded file (build) into custom code tab.
 5. Preview the plugin to ensure its working and then press save.
