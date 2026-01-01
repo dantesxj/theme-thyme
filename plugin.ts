@@ -6,6 +6,7 @@ export class Plugin extends AppPlugin {
     Helpers: Helpers = new Helpers();
     STORAGE_KEY: string = "theme-architect";
     onLoad() {
+        this.hydrateThemeFromStorage();
         this.ui.addSidebarItem({
             label: "Theme Architect",
             icon: "analyze",
@@ -81,24 +82,27 @@ export class Plugin extends AppPlugin {
             });
             presetSelect.value = "custom";
         } else {
-            const defaultTheme = presetThemes[""];
-            Object.entries(defaultTheme).forEach(([varName, hex]) => {
-                this.applyThemeVariable(varName, hex as string, container);
-            });
+            const firstPresetKey = Object.keys(presetThemes)[0];
+            const defaultTheme = presetThemes[firstPresetKey];
+            if (defaultTheme) {
+                Object.entries(defaultTheme).forEach(([varName, hex]) => {
+                    this.applyThemeVariable(varName, hex as string, container);
+                });
+                presetSelect.value = firstPresetKey;
+            }
         }
-        const presetOptions = (presetSelect.innerHTML = Object.keys(
-            presetThemes
-        )
+        const presetOptionsMarkup = Object.keys(presetThemes)
             .map(
                 (key) =>
                     `<option value="${key}">${
                         key.charAt(0).toUpperCase() + key.slice(1)
                     }</option>`
             )
-            .join(""));
+            .join("");
+
         presetSelect.innerHTML =
             `<option value="custom" id="opt-custom">✨ Custom (Modified)</option>` +
-            presetOptions;
+            presetOptionsMarkup;
 
         presetSelect.addEventListener("change", () => {
             const selectedTheme = presetThemes[presetSelect.value];
@@ -228,18 +232,25 @@ export class Plugin extends AppPlugin {
     }
     private hydrateThemeFromStorage() {
         const saved = localStorage.getItem(this.STORAGE_KEY);
+        let themeData;
         if (saved) {
             try {
-                const themeData = JSON.parse(saved);
-                Object.entries(themeData).forEach(([varName, hex]) => {
-                    document.documentElement.style.setProperty(
-                        varName,
-                        hex as string
-                    );
-                });
+                themeData = JSON.parse(saved);
             } catch (e) {
                 console.error("Failed to load custom theme from storage", e);
             }
+        }
+        if (!themeData) {
+            const firstPresetKey = Object.keys(presetThemes)[0];
+            themeData = presetThemes[firstPresetKey];
+        }
+        if (themeData) {
+            Object.entries(themeData).forEach(([varName, hex]) => {
+                document.documentElement.style.setProperty(
+                    varName,
+                    hex as string
+                );
+            });
         }
     }
 }
