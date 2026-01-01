@@ -44,7 +44,7 @@ When you hit the Randomize button, the engine:
 
 ## 💻 Installation
 
-To install download the latest release from the releases page on this github.
+To install navigate to [Latest Release](https://github.com/asbedb/theme-thyme/tree/main/latest-release) or the releases page on this github.
 
 1. Navigate to the Plugins page in thymer by using ctrl or cmd + p and searching for plugins.
 2. Click create plugin
