@@ -1,5 +1,6 @@
 export const presetThemes: Record<string, Record<string, string>> = {
     catppuccin_by_jd_and_niklas: {
+        // Base backgrounds
         "--color-bg-50": "#bac2de",
         "--color-bg-100": "#a6adc8",
         "--color-bg-150": "#9399b2",
@@ -12,19 +13,128 @@ export const presetThemes: Record<string, Record<string, string>> = {
         "--color-bg-800": "#181825",
         "--color-bg-900": "#11111b",
         "--color-bg-950": "#0a0a12",
+        "--color-bg-500-50": "rgba(69, 71, 90, 0.5)",
+        "--color-bg-950-50": "rgba(10, 10, 18, 0.65)",
+
+        // Mauve primary
+        "--color-primary-50": "#faf5ff",
+        "--color-primary-100": "#f3e8fe",
+        "--color-primary-200": "#e9d5fd",
+        "--color-primary-300": "#d8b4fc",
         "--color-primary-400": "#cba6f7",
+        "--color-primary-500": "#b48cf0",
         "--color-primary-600": "#9d71e8",
+        "--color-primary-700": "#8657db",
+        "--color-primary-800": "#6b3fbd",
+        "--color-primary-900": "#502d96",
+        "--color-primary-950": "#351d6b",
+        "--color-primary-400-70": "rgba(203, 166, 247, 0.7)",
+        "--color-primary-950-20": "rgba(53, 29, 107, 0.2)",
+        "--color-primary-text-100": "#1e1e2e",
+
+        // Text
+        "--color-text-50": "#cdd6f4",
         "--color-text-100": "#ffffff",
+        "--color-text-200": "#cdd6f4",
+        "--color-text-300": "#cdd6f4",
+        "--color-text-400": "#cdd6f4",
+        "--color-text-500": "#cdd6f4",
+        "--color-text-600": "#6c7086",
+        "--color-text-700": "#a6e3a1",
+        "--color-text-800": "#cdd6f4",
+        "--color-text-900": "#313244",
+        "--color-text-950": "#b4befe",
+
+        // Semantic
         "--text-ok": "#a6e3a1",
+        "--text-status-online": "#a6e3a1",
         "--text-warning": "#fab387",
         "--text-error": "#f38ba8",
+        "--bg-alert": "#f38ba8",
+        "--fg-alert": "#1e1e2e",
+
+        // Links
         "--link-color": "#89b4fa",
+        "--link-hover-color": "#b4befe",
+        "--ed-link-color": "#89b4fa",
+        "--ed-link-hover-color": "#b4befe",
+
+        // Hashtags, Mentions, Dates
         "--ed-hashtag-color": "#94e2d5",
+        "--ed-hashtag-bg": "rgba(148, 226, 213, 0.15)",
+        "--ed-mention-color": "#f5c2e7",
+        "--ed-mention-bg": "rgba(245, 194, 231, 0.15)",
+        "--ed-mention-hover-bg": "rgba(245, 194, 231, 0.25)",
+        "--ed-mention-hover-color": "#f5c2e7",
+        "--ed-datetime-color": "#74c7ec",
+        "--ed-datetime-bg": "rgba(116, 199, 236, 0.15)",
+
+        // UI Components
+        "--ed-check-div-border": "#cba6f7",
+        "--ed-check-div-hover-border": "#d8b4fc",
+        "--ed-check-done-bg": "#a6e3a1",
+        "--ed-check-done-fg": "#1e1e2e",
+        "--selection-bg": "rgba(203, 166, 247, 0.35)",
+        "--selection-fg": "#cdd6f4",
+        "--ed-selection-self-bg": "rgba(203, 166, 247, 0.25)",
+        "--ed-selection-blurred-bg": "rgba(203, 166, 247, 0.1)",
         "--ed-quote-border-color": "#b4befe",
+        "--ed-code-border": "#45475a",
+        "--ed-code-bg": "rgba(49, 50, 68, 0.5)",
+
+        // Surfaces & Sidebar
         "--cards-bg": "#181825",
-        "--input-bg-color": "#181825",
-        "--logo-color": "#cba6f7",
+        "--cards-hover-bg": "#1e1e2e",
+        "--cards-border-color": "#313244",
+        "--cards-border-color-focused": "#45475a",
         "--side-bg-active-focus": "#cba6f7",
+        "--side-fg-active-focus": "#1e1e2e",
+        "--sidebar-bg-hover": "#313244",
+
+        // Command Palette & Inputs
+        "--cmdpal-bg-color": "#1e1e2e",
+        "--cmdpal-selected-bg-color": "#cba6f7",
+        "--cmdpal-selected-fg-color": "#1e1e2e",
+        "--cmdpal-hover-bg-color": "#313244",
+        "--cmdpal-border-color": "#45475a",
+        "--input-bg-color": "#181825",
+        "--input-border-color": "#45475a",
+        "--input-border-focus": "1px solid #cba6f7",
+        "--input-border-shadow": "0 0 8px rgba(203, 166, 247, 0.4)",
+
+        // Buttons
+        "--button-primary-bg-color": "#cba6f7",
+        "--button-primary-fg-color": "#1e1e2e",
+        "--button-primary-bg-hover-color": "#d8b4fc",
+        "--button-bg-color": "#313244",
+        "--button-border-color": "#45475a",
+        "--button-bg-hover-color": "#45475a",
+
+        // Logo & Shadows
+        "--color-shadow": "rgba(0, 0, 0, 0.25)",
+        "--color-shadow-cards": "0 4px 6px rgba(0, 0, 0, 0.2)",
+        "--color-shadow-hover": "0 6px 12px rgba(0, 0, 0, 0.3)",
+        "--logo-color": "#cba6f7",
+        "--logo-glow-shadow":
+            "0 0 15px rgba(203, 166, 247, 0.5), 0 0 30px rgba(203, 166, 247, 0.3)",
+
+        // Enums
+        "--enum-red-bg": "rgba(243, 139, 168, 0.25)",
+        "--enum-red-fg": "#f38ba8",
+        "--enum-orange-bg": "rgba(250, 179, 135, 0.25)",
+        "--enum-orange-fg": "#fab387",
+        "--enum-yellow-bg": "rgba(249, 226, 175, 0.25)",
+        "--enum-yellow-fg": "#f9e2af",
+        "--enum-green-bg": "rgba(166, 227, 161, 0.25)",
+        "--enum-green-fg": "#a6e3a1",
+        "--enum-cyan-bg": "rgba(148, 226, 213, 0.25)",
+        "--enum-cyan-fg": "#94e2d5",
+        "--enum-blue-bg": "rgba(137, 180, 250, 0.25)",
+        "--enum-blue-fg": "#89b4fa",
+        "--enum-purple-bg": "rgba(203, 166, 247, 0.25)",
+        "--enum-purple-fg": "#cba6f7",
+        "--enum-pink-bg": "rgba(245, 194, 231, 0.25)",
+        "--enum-pink-fg": "#f5c2e7",
     },
 
     wayward_by_hostile_spoon: {
@@ -44,9 +154,7 @@ export const presetThemes: Record<string, Record<string, string>> = {
         "--input-bg-color": "#242220",
         "--logo-color": "#d79921",
     },
-
     nordic: {
-        // Deep Arctic Blues
         "--color-bg-700": "#2e3440",
         "--color-bg-800": "#242933",
         "--color-bg-900": "#1b1e25",
@@ -62,10 +170,17 @@ export const presetThemes: Record<string, Record<string, string>> = {
         "--cards-bg": "#242933",
         "--input-bg-color": "#2e3440",
         "--logo-color": "#88c0d0",
+        "--side-bg-active-focus": "#88c0d0",
+        "--side-fg-active-focus": "#2e3440",
+        "--cmdpal-bg-color": "#2e3440",
+        "--cmdpal-selected-bg-color": "#88c0d0",
+        "--button-primary-bg-color": "#88c0d0",
+        "--enum-purple-fg": "#b48ead",
+        "--enum-blue-fg": "#81a1c1",
+        "--enum-green-fg": "#a3be8c",
     },
 
     rose_pine: {
-        // Muted Soft Palette
         "--color-bg-700": "#191724",
         "--color-bg-800": "#12101b",
         "--color-bg-900": "#0a0910",
@@ -81,6 +196,14 @@ export const presetThemes: Record<string, Record<string, string>> = {
         "--cards-bg": "#1f1d2e",
         "--input-bg-color": "#191724",
         "--logo-color": "#ebbcba",
+        "--side-bg-active-focus": "#ebbcba",
+        "--side-fg-active-focus": "#191724",
+        "--cmdpal-bg-color": "#191724",
+        "--cmdpal-selected-bg-color": "#ebbcba",
+        "--button-primary-bg-color": "#ebbcba",
+        "--enum-purple-fg": "#c4a7e7",
+        "--enum-blue-fg": "#31748f",
+        "--enum-green-fg": "#9ccfd8",
     },
 
     cyber_lime: {
@@ -99,5 +222,179 @@ export const presetThemes: Record<string, Record<string, string>> = {
         "--cards-bg": "#0a0a0a",
         "--input-bg-color": "#111111",
         "--logo-color": "#ccff00",
+        "--side-bg-active-focus": "#ccff00",
+        "--side-fg-active-focus": "#000000",
+        "--button-primary-bg-color": "#ccff00",
+        "--input-border-focus": "1px solid #ccff00",
+        "--logo-glow-shadow": "0 0 15px rgba(204, 255, 0, 0.5)",
+    },
+
+    tokyo_night: {
+        "--color-bg-700": "#1a1b26",
+        "--color-bg-800": "#16161e",
+        "--color-bg-900": "#101014",
+        "--color-bg-400": "#414868",
+        "--color-primary-400": "#7aa2f7",
+        "--color-text-100": "#c0caf5",
+        "--text-ok": "#9ece6a",
+        "--text-warning": "#e0af68",
+        "--text-error": "#f7768e",
+        "--link-color": "#2ac3de",
+        "--ed-hashtag-color": "#bb9af7",
+        "--ed-quote-border-color": "#cfc9c2",
+        "--cards-bg": "#16161e",
+        "--input-bg-color": "#1a1b26",
+        "--logo-color": "#7aa2f7",
+        "--side-bg-active-focus": "#7aa2f7",
+        "--side-fg-active-focus": "#1a1b26",
+        "--cmdpal-bg-color": "#1a1b26",
+        "--cmdpal-selected-bg-color": "#7aa2f7",
+        "--enum-purple-fg": "#bb9af7",
+        "--enum-blue-fg": "#7aa2f7",
+        "--enum-cyan-fg": "#2ac3de",
+    },
+
+    monokai_pro: {
+        "--color-bg-700": "#2d2a2e",
+        "--color-bg-800": "#221f22",
+        "--color-bg-900": "#19181a",
+        "--color-bg-400": "#5b595c",
+        "--color-primary-400": "#ffd866",
+        "--color-text-100": "#fcfcfa",
+        "--text-ok": "#a9dc76",
+        "--text-warning": "#fc9867",
+        "--text-error": "#ff6188",
+        "--link-color": "#78dce8",
+        "--ed-hashtag-color": "#ab9df2",
+        "--ed-quote-border-color": "#727072",
+        "--cards-bg": "#221f22",
+        "--input-bg-color": "#2d2a2e",
+        "--logo-color": "#ffd866",
+        "--side-bg-active-focus": "#ffd866",
+        "--side-fg-active-focus": "#2d2a2e",
+        "--button-primary-bg-color": "#ffd866",
+        "--enum-pink-fg": "#ff6188",
+        "--enum-orange-fg": "#fc9867",
+        "--enum-yellow-fg": "#ffd866",
+    },
+
+    everforest: {
+        "--color-bg-700": "#2d353b",
+        "--color-bg-800": "#232a2e",
+        "--color-bg-900": "#1e2326",
+        "--color-bg-400": "#505a60",
+        "--color-primary-400": "#a7c080",
+        "--color-text-100": "#d3c6aa",
+        "--text-ok": "#83c092",
+        "--text-warning": "#dbbc7f",
+        "--text-error": "#e67e80",
+        "--link-color": "#7fbbb3",
+        "--ed-hashtag-color": "#d699b6",
+        "--ed-quote-border-color": "#859289",
+        "--cards-bg": "#232a2e",
+        "--input-bg-color": "#2d353b",
+        "--logo-color": "#a7c080",
+        "--side-bg-active-focus": "#a7c080",
+        "--side-fg-active-focus": "#2d353b",
+        "--cmdpal-selected-bg-color": "#a7c080",
+        "--button-primary-bg-color": "#a7c080",
+        "--enum-green-fg": "#83c092",
+        "--enum-yellow-fg": "#dbbc7f",
+    },
+
+    dracula: {
+        "--color-bg-700": "#282a36",
+        "--color-bg-800": "#1e1f29",
+        "--color-bg-900": "#191a21",
+        "--color-bg-400": "#44475a",
+        "--color-primary-400": "#bd93f9",
+        "--color-text-100": "#f8f8f2",
+        "--text-ok": "#50fa7b",
+        "--text-warning": "#ffb86c",
+        "--text-error": "#ff5555",
+        "--link-color": "#8be9fd",
+        "--ed-hashtag-color": "#ff79c6",
+        "--ed-quote-border-color": "#6272a4",
+        "--cards-bg": "#1e1f29",
+        "--input-bg-color": "#282a36",
+        "--logo-color": "#bd93f9",
+        "--side-bg-active-focus": "#bd93f9",
+        "--side-fg-active-focus": "#282a36",
+        "--button-primary-bg-color": "#bd93f9",
+        "--cmdpal-selected-bg-color": "#bd93f9",
+        "--enum-purple-fg": "#bd93f9",
+        "--enum-pink-fg": "#ff79c6",
+    },
+
+    synthwave_84: {
+        "--color-bg-700": "#2b213a",
+        "--color-bg-800": "#241b2f",
+        "--color-bg-900": "#1f1826",
+        "--color-bg-400": "#493e5b",
+        "--color-primary-400": "#ff7edb",
+        "--color-text-100": "#ffffff",
+        "--text-ok": "#72f1b8",
+        "--text-warning": "#fede5d",
+        "--text-error": "#fe4450",
+        "--link-color": "#03edf9",
+        "--ed-hashtag-color": "#ff7edb",
+        "--ed-quote-border-color": "#34294f",
+        "--cards-bg": "#241b2f",
+        "--input-bg-color": "#2b213a",
+        "--logo-color": "#fede5d",
+        "--side-bg-active-focus": "#ff7edb",
+        "--side-fg-active-focus": "#2b213a",
+        "--logo-glow-shadow": "0 0 15px rgba(255, 126, 219, 0.6)",
+        "--button-primary-bg-color": "#ff7edb",
+    },
+    solarized_dark: {
+        // Base backgrounds (The iconic Solarized Blue/Greys)
+        "--color-bg-700": "#073642", // Base02
+        "--color-bg-800": "#002b36", // Base03
+        "--color-bg-900": "#001e26", // Deeper Base
+        "--color-bg-400": "#586e75", // Base01
+        "--color-primary-400": "#268bd2", // Blue
+        "--color-text-100": "#93a1a1", // Base1
+        "--text-ok": "#859900", // Green
+        "--text-warning": "#cb4b16", // Orange
+        "--text-error": "#dc322f", // Red
+        "--link-color": "#2aa198", // Cyan
+        "--ed-hashtag-color": "#b58900", // Yellow
+        "--ed-quote-border-color": "#657b83", // Base00
+        "--cards-bg": "#002b36",
+        "--input-bg-color": "#073642",
+        "--logo-color": "#268bd2",
+        "--side-bg-active-focus": "#268bd2",
+        "--side-fg-active-focus": "#fdf6e3", // Base3
+        "--cmdpal-selected-bg-color": "#268bd2",
+        "--button-primary-bg-color": "#268bd2",
+        "--enum-yellow-fg": "#b58900",
+        "--enum-purple-fg": "#6c71c4", // Violet
+    },
+
+    ayo_dark: {
+        // Vibrant, high-contrast modern dark
+        "--color-bg-700": "#1f2430",
+        "--color-bg-800": "#171b24",
+        "--color-bg-900": "#0f131a",
+        "--color-bg-400": "#3e4b59",
+        "--color-primary-400": "#ffcc66", // Gold/Yellow
+        "--color-text-100": "#cbccc6",
+        "--text-ok": "#bae67e",
+        "--text-warning": "#ffa759",
+        "--text-error": "#ff3333",
+        "--link-color": "#5ccfe6",
+        "--ed-hashtag-color": "#ffd580",
+        "--ed-quote-border-color": "#707a8c",
+        "--cards-bg": "#171b24",
+        "--input-bg-color": "#1f2430",
+        "--logo-color": "#ffcc66",
+        "--side-bg-active-focus": "#ffcc66",
+        "--side-fg-active-focus": "#0f131a",
+        "--cmdpal-selected-bg-color": "#ffcc66",
+        "--button-primary-bg-color": "#ffcc66",
+        "--enum-purple-fg": "#d4bfff",
+        "--enum-blue-fg": "#73d0ff",
+        "--enum-green-fg": "#bae67e",
     },
 };

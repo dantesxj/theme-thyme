@@ -1,24 +1,31 @@
-import { Helpers } from "./helpers";
 import { HTML_LAYOUT } from "./PanelForm";
 import { presetThemes } from "./presetThemes";
 
 export class Plugin extends AppPlugin {
-    Helpers: Helpers = new Helpers();
-    STORAGE_KEY: string = "theme-architect";
+    STORAGE_KEY: string = "theme-architect-raw-css";
+
     onLoad() {
-        this.hydrateThemeFromStorage();
         this.ui.addSidebarItem({
             label: "Theme Architect",
             icon: "analyze",
-            tooltip: "Live customisation of colors for thymer",
+            tooltip: "Live CSS Editor",
             onClick: () => {
                 this.createAndNavigateToNewPanel();
             },
         });
     }
 
-    public onUnload(): void {
-        this.saveCurrentThemeTostorage();
+    onUnload() {
+        const panel = this.ui.getActivePanel();
+        const element = panel?.getElement();
+        const cssInput = element?.querySelector(
+            "#css-input"
+        ) as HTMLTextAreaElement;
+
+        // Cleanup styles from the document when the plugin/panel is closed
+        if (cssInput) {
+            this.resetTheme(cssInput);
+        }
     }
 
     async createAndNavigateToNewPanel() {
@@ -26,9 +33,9 @@ export class Plugin extends AppPlugin {
             const element = panel.getElement();
             if (element === null) return;
             element.innerHTML = HTML_LAYOUT;
-            this.hydrateThemeFromStorage();
             this.setupThemeLogic(element);
         });
+
         const newPanel = await this.ui.createPanel();
         if (newPanel) {
             newPanel.setTitle("Theme Architect");
@@ -36,221 +43,198 @@ export class Plugin extends AppPlugin {
         }
     }
 
-    //WCAG Standards Contrast feedback
-    private updateContrastUI(container: HTMLElement) {
-        const badge = container.querySelector("#contrast-badge") as HTMLElement;
-        const bgInput = container.querySelector(
-            '[data-var="--color-bg-700"]'
-        ) as HTMLInputElement;
-        const txtInput = container.querySelector(
-            '[data-var="--color-text-100"]'
-        ) as HTMLInputElement;
+    /**
+     * Clears specific CSS variables from the document root based on input text
+     */
+    private clearActiveStyles(cssContent: string) {
+        if (!cssContent) return;
+        const regex = /(--[\w-]+)/g;
+        const matches = cssContent.match(regex);
+        if (matches) {
+            [...new Set(matches)].forEach((prop) => {
+                document.documentElement.style.removeProperty(prop.trim());
+            });
+        }
+    }
 
-        if (!badge || !bgInput || !txtInput) return;
-        const l1 = this.Helpers.getLuminance(bgInput.value);
-        const l2 = this.Helpers.getLuminance(txtInput.value);
-        const ratioObject = this.Helpers.calculateContrastRatio(l1, l2);
-        badge.textContent = `CONTRAST: ${ratioObject.ratio.toFixed(1)}:1 ${
-            ratioObject.pass ? "✅" : "❌"
-        }`;
-        badge.style.background = ratioObject.pass ? "#a6e3a1" : "#f38ba8";
-        badge.style.color = "#11111b";
+    /**
+     * Resets the UI and removes all custom document styles
+     */
+    private resetTheme(cssInput: HTMLTextAreaElement) {
+        this.clearActiveStyles(cssInput.value);
+        document.documentElement.style.removeProperty("color-scheme");
+        cssInput.value = "";
+    }
+
+    /**
+     * Ensures color-scheme is the very first line of the textarea
+     */
+    private updateColorSchemeInText(
+        textarea: HTMLTextAreaElement,
+        scheme: string
+    ) {
+        const currentText = textarea.value;
+        const schemeLine = `color-scheme: ${scheme};`;
+
+        // Remove any existing color-scheme line
+        const cleanedText = currentText.replace(
+            /^color-scheme: (dark|light|white);?\n?/m,
+            ""
+        );
+
+        // Prepend the new one
+        textarea.value = schemeLine + "\n" + cleanedText.trimStart();
     }
 
     private setupThemeLogic(container: HTMLElement): void {
-        const themeForm = container.querySelector(
-            "#theme-form"
-        ) as HTMLFormElement;
-        const inputs = container.querySelectorAll<HTMLInputElement>(
-            'input[type="color"]'
-        );
-        const copyBtn = container.querySelector(
-            "#copy-css"
-        ) as HTMLButtonElement;
-        const randomizeBtn = container.querySelector(
-            "#randomize-theme"
-        ) as HTMLButtonElement;
+        const cssInput = container.querySelector(
+            "#css-input"
+        ) as HTMLTextAreaElement;
         const presetSelect = container.querySelector(
             "#theme-preset"
         ) as HTMLSelectElement;
+        const schemeSelect = container.querySelector(
+            "#scheme-select"
+        ) as HTMLSelectElement;
+        const themeNameInput = container.querySelector(
+            "#theme-name"
+        ) as HTMLInputElement;
+        const resetBtn = container.querySelector(
+            "#reset-theme"
+        ) as HTMLButtonElement;
+        const previewBtn = container.querySelector(
+            "#preview-css"
+        ) as HTMLButtonElement;
+        const copyBtn = container.querySelector(
+            "#copy-css"
+        ) as HTMLButtonElement;
 
-        const saved = localStorage.getItem(this.STORAGE_KEY);
-        if (saved) {
-            const themeData = JSON.parse(saved);
-            Object.entries(themeData).forEach(([varName, hex]) => {
-                this.applyThemeVariable(varName, hex as string, container);
-            });
-            presetSelect.value = "custom";
-        } else {
-            const firstPresetKey = Object.keys(presetThemes)[0];
-            const defaultTheme = presetThemes[firstPresetKey];
-            if (defaultTheme) {
-                Object.entries(defaultTheme).forEach(([varName, hex]) => {
-                    this.applyThemeVariable(varName, hex as string, container);
-                });
-                presetSelect.value = firstPresetKey;
-            }
-        }
-        const presetOptionsMarkup = Object.keys(presetThemes)
+        // 1. Populate Dropdown (Alphabetical)
+        const sortedKeys = Object.keys(presetThemes).sort();
+        const presetOptionsMarkup = sortedKeys
             .map(
                 (key) =>
-                    `<option value="${key}">${
-                        key.charAt(0).toUpperCase() + key.slice(1)
-                    }</option>`
+                    `<option value="${key}">${key
+                        .replace(/_/g, " ")
+                        .toUpperCase()}</option>`
             )
             .join("");
 
         presetSelect.innerHTML =
-            `<option value="custom" id="opt-custom">✨ Custom (Modified)</option>` +
+            `<option value="default">✨ Default (Reset)</option>` +
+            `<option value="custom" hidden>🛠️ Custom (Modified)</option>` +
             presetOptionsMarkup;
 
+        // 2. Set Initial State
+        cssInput.value = "";
+        presetSelect.value = "default";
+
+        // 3. Theme Selection Logic
         presetSelect.addEventListener("change", () => {
-            const selectedTheme = presetThemes[presetSelect.value];
-            if (selectedTheme) {
-                Object.entries(selectedTheme).forEach(([varName, hex]) => {
-                    this.applyThemeVariable(varName, hex as string, container);
-                });
-                this.updateContrastUI(container);
+            const selectedKey = presetSelect.value;
+
+            if (selectedKey === "default") {
+                this.resetTheme(cssInput);
+            } else if (selectedKey !== "custom") {
+                // IMPORTANT: Wipe old variables before loading new ones
+                this.clearActiveStyles(cssInput.value);
+
+                this.loadPresetIntoTextarea(selectedKey, cssInput);
+                this.updateColorSchemeInText(cssInput, schemeSelect.value);
+
+                // Auto-apply preview
+                this.applyCSSFromText(cssInput.value);
             }
         });
-        randomizeBtn.addEventListener("click", () => {
-            // Pick one anchor hue for the whole session
-            const masterHue = Math.floor(Math.random() * 360);
 
-            inputs.forEach((input) => {
-                const varName = input.dataset.var;
-                if (!varName) return;
-
-                let hex: string;
-
-                if (varName.includes("bg")) {
-                    // Backgrounds: Low saturation, very low lightness (Dark Theme)
-                    hex = this.Helpers.hslToHex(
-                        masterHue,
-                        15,
-                        Math.random() * 10 + 5
-                    );
-                } else if (
-                    varName.includes("primary") ||
-                    varName.includes("logo")
-                ) {
-                    hex = this.Helpers.randomCohesiveHex(masterHue);
-                } else if (varName.includes("text")) {
-                    hex = this.Helpers.hslToHex(masterHue, 10, 90);
-                } else {
-                    hex = this.Helpers.randomCohesiveHex(masterHue);
-                }
-
-                this.applyThemeVariable(varName, hex, container);
-            });
-
-            presetSelect.value = "custom";
-            this.updateContrastUI(container);
-            this.saveCurrentThemeTostorage();
+        // 4. Color Scheme Switcher
+        schemeSelect.addEventListener("change", () => {
+            this.updateColorSchemeInText(cssInput, schemeSelect.value);
+            document.documentElement.style.setProperty(
+                "color-scheme",
+                schemeSelect.value
+            );
+            // Re-apply styles to ensure sync
+            this.applyCSSFromText(cssInput.value);
         });
 
-        themeForm.addEventListener("input", (e) => {
-            const target = e.target as HTMLInputElement;
-            const varName = target.dataset.var;
-            if (varName) {
-                this.applyThemeVariable(varName, target.value, container);
-                this.updateContrastUI(container);
-                this.saveCurrentThemeTostorage();
+        // 5. Manual Text Editing
+        cssInput.addEventListener("input", () => {
+            if (presetSelect.value !== "custom") {
+                presetSelect.value = "custom";
             }
         });
+
+        // 6. Reset Button
+        resetBtn.addEventListener("click", () => {
+            this.resetTheme(cssInput);
+            presetSelect.value = "default";
+            themeNameInput.value = "";
+        });
+
+        // 7. Preview Button
+        previewBtn.addEventListener("click", () => {
+            this.applyCSSFromText(cssInput.value);
+            const originalText = previewBtn.textContent;
+            previewBtn.textContent = "⚡ APPLIED";
+            setTimeout(() => (previewBtn.textContent = originalText), 1000);
+        });
+
+        // 8. Copy Button (with basic- prefixing)
         copyBtn.addEventListener("click", () => {
-            const themeName =
-                (
-                    container.querySelector(
-                        "#custom-theme-name"
-                    ) as HTMLInputElement
-                )?.value || "custom-theme";
-            let css = `html[data-theme="basic-${themeName}"] {\n  color-scheme: dark;\n`;
-            inputs.forEach((input) => {
-                css += `  ${input.dataset.var}: ${input.value};\n`;
-            });
-            css += `}`;
-            navigator.clipboard.writeText(css).then(() => {
+            const rawName =
+                themeNameInput.value
+                    .trim()
+                    .replace(/\s+/g, "-")
+                    .toLowerCase() || "custom-theme";
+            const finalThemeName = `basic-${rawName}`;
+
+            const cleanLines = cssInput.value
+                .split("\n")
+                .map((line) => line.trim())
+                .filter((line) => line.length > 0)
+                .map((line) => `  ${line}`)
+                .join("\n");
+
+            const finalOutput = `html[data-theme="${finalThemeName}"] {\n${cleanLines}\n}`;
+
+            navigator.clipboard.writeText(finalOutput).then(() => {
                 const originalText = copyBtn.textContent;
                 copyBtn.textContent = "✅ COPIED!";
-                copyBtn.style.background = "var(--text-ok)";
-
-                setTimeout(() => {
-                    copyBtn.textContent = originalText;
-                    copyBtn.style.background = "var(--color-primary-400)";
-                }, 2000);
+                setTimeout(() => (copyBtn.textContent = originalText), 2000);
             });
         });
-        if (!saved) {
-            presetSelect.dispatchEvent(new Event("change"));
-        } else {
-            this.updateContrastUI(container);
-        }
     }
 
-    private applyThemeVariable(
-        varName: string,
-        hex: string,
-        container: HTMLElement
-    ) {
-        document.documentElement.style.setProperty(varName, hex);
-        if (varName === "--color-bg-500")
-            document.documentElement.style.setProperty(
-                "--color-bg-500-50",
-                this.Helpers.hexToRgba(hex, 0.5)
-            );
-        if (varName === "--color-primary-400") {
-            document.documentElement.style.setProperty(
-                "--selection-bg",
-                this.Helpers.hexToRgba(hex, 0.35)
-            );
-            document.documentElement.style.setProperty(
-                "--color-primary-400-70",
-                this.Helpers.hexToRgba(hex, 0.7)
-            );
-        }
-
-        const input = container.querySelector(
-            `input[data-var="${varName}"]`
-        ) as HTMLInputElement;
-        if (input) input.value = hex;
+    private loadPresetIntoTextarea(key: string, textarea: HTMLTextAreaElement) {
+        const theme = presetThemes[key];
+        if (!theme) return;
+        textarea.value = Object.entries(theme)
+            .map(([k, v]) => `${k}: ${v};`)
+            .join("\n");
     }
 
-    private saveCurrentThemeTostorage() {
-        const themeData: Record<string, string> = {};
-        const inputs = document.querySelectorAll<HTMLInputElement>(
-            '#theme-form input[type="color"]'
-        );
-        if (inputs.length > 0) {
-            inputs.forEach((input) => {
-                if (input.dataset.var) {
-                    themeData[input.dataset.var] = input.value;
-                }
-            });
-            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(themeData));
-        }
-    }
-    private hydrateThemeFromStorage() {
-        const saved = localStorage.getItem(this.STORAGE_KEY);
-        let themeData;
-        if (saved) {
-            try {
-                themeData = JSON.parse(saved);
-            } catch (e) {
-                console.error("Failed to load custom theme from storage", e);
+    private applyCSSFromText(css: string) {
+        // Match variables
+        const varRegex = /(--[\w-]+)\s*:\s*([^;]+);/g;
+        // Match color scheme
+        const schemeRegex = /color-scheme:\s*(dark|light|white);/i;
+
+        let match;
+        while ((match = varRegex.exec(css)) !== null) {
+            const prop = match[1].trim();
+            const val = match[2].trim();
+            if (prop && val) {
+                document.documentElement.style.setProperty(prop, val);
             }
         }
-        if (!themeData) {
-            const firstPresetKey = Object.keys(presetThemes)[0];
-            themeData = presetThemes[firstPresetKey];
-        }
-        if (themeData) {
-            Object.entries(themeData).forEach(([varName, hex]) => {
-                document.documentElement.style.setProperty(
-                    varName,
-                    hex as string
-                );
-            });
+
+        const schemeMatch = css.match(schemeRegex);
+        if (schemeMatch) {
+            document.documentElement.style.setProperty(
+                "color-scheme",
+                schemeMatch[1].trim()
+            );
         }
     }
 }
