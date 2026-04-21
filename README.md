@@ -1,29 +1,41 @@
 # Theme Architect for Thymer
 
-Reworked to suit a wider variety of customisations!
+This repository is a fork/customization of Theme Architect work for Thymer.
 
-Theme Architect is a powerful, real-time css editor for Thymer. It allows you to use a live IDE style CSS customiser to help fine tune colours for your thymer experience and comes preloaded with some themes to get you started
+‼️ In progress. Created by AI, vibes, and someone who knows nothing about coding! Suggestions and support very welcome! ‼️
 
-## 🚀 Features
+Theme Architect is a live CSS editor for Thymer. It helps you preview color-variable changes quickly, try presets, and export a full `html[data-theme="..."]` block for reuse.
 
--   Theme Presets: Includes professional presets like Catppuccin Mocha, Nordic Frost, and Rose Pine.
+## Fork Focus
 
--   Instant CSS Export: Generate and copy the complete html[data-theme] CSS block with a single click to share or use in your custom stylesheets.
+- Expanded preset and customization workflow used in this workspace
+- Faster iteration with copy/export and live preview behavior
+- Release artifacts maintained in `latest-release/` for easy install
 
-🛠 Usage
+## Features
 
--   Open the Architect from your sidebar.
+- Theme presets, including Catppuccin-inspired and other bundled options
+- Live preview of CSS variables on demand
+- One-click CSS export with automatic theme-name wrapper
+- Reset flow for clearing active custom variables
 
--   Tweak & Tune: Use the editor to enter custom CSS or tweak existing themes.
+## Usage
 
--   Save/Export: Once you've perfected your look, use the COPY CSS button to get your code.
+- Open **Theme Architect** from the sidebar
+- Select a preset or edit variables directly
+- Click **PREVIEW** to apply your current theme
+- Click **COPY CSS** to export your final theme block
 
-## 💻 Installation
+## Install (from `latest-release`)
 
-To install navigate to latest-release folder.
+1. Open Thymer, then open the Plugins screen (`Cmd/Ctrl + P` and search `Plugins`)
+2. Choose **Create Plugin**
+3. Copy `latest-release/plugin.json` into the plugin configuration tab
+4. Copy `latest-release/plugin.ts` into the custom code tab  
+   (this file is the bundled runtime artifact used for install)
+5. Preview, then save
 
-1. Navigate to the Plugins page in thymer by using ctrl or cmd + p and searching for plugins.
-2. Click create plugin
-3. Copy the contents of `plugin.json` from your downloaded file and paste under the configuration tab.
-4. Copy the contents of `plugin.ts` from your downloaded file (build) into custom code tab.
-5. Preview the plugin to ensure its working and then press save.
+## Credits
+
+- Original Theme Architect plugin work by upstream maintainers/contributors
+- Fork maintenance and customizations in this repo by `dantesxj`
