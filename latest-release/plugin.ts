@@ -523,6 +523,7 @@ var plugins = (() => {
                 <p style="font-size: 10px; color: var(--color-text-700); margin: 0;">Requires a background image above, or a dark wallpaper visible through the app window. Lower = more transparent.</p>
                 ${makeSlider("Overall", "panel-opacity", 0.85)}
                 ${makeSlider("Command Palette", "cmdpal-opacity", 0.92)}
+                ${makeSlider("Plugin Cards", "plugin-cards-opacity", 0.24)}
                 <div style="margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--color-bg-400); display: flex; flex-direction: column; gap: 6px;">
                     <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 11px; color: var(--color-text-100);">
                         <input type="checkbox" id="desktop-hide-titlebar" style="margin-top: 2px; accent-color: var(--color-primary-400); flex-shrink: 0;">
@@ -540,8 +541,6 @@ var plugins = (() => {
 
                 ${makeSlider("Panel Blur (px)", "panel-blur", 0, 0, 24, 1, "px")}
                 <div style="padding:6px 0 2px;font-size:11px;color:var(--text-muted);opacity:0.6;">Sidebar blur disabled (CSS limitation — breaks menus)</div>
-                ${makeSlider("Card Blur (px)", "card-blur", 0, 0, 16, 1, "px")}
-                ${makeSlider("List Item Blur (px)", "listitem-blur", 0, 0, 16, 1, "px")}
             </div>
 
         </div>
@@ -742,11 +741,12 @@ var plugins = (() => {
       const panelOpacity   = bgData.panelOpacity   ?? 0.85;
       const sidebarOpacity = panelOpacity;  // master slider controls all
       const cmdpalOpacity  = bgData.cmdpalOpacity   ?? 0.92;
+      const pluginCardsOpacity = bgData.pluginCardsOpacity ?? 0.24;
       const cardsOpacity   = panelOpacity;
       const modalOpacity   = panelOpacity;
       const panelBlur      = bgData.panelBlur       ?? 0;
-      const cardBlur       = bgData.cardBlur        ?? 0;
-      const listitemBlur   = bgData.listitemBlur    ?? 0;
+      const cardBlur       = 0;
+      const listitemBlur   = 0;
       const listitemCardOpacity   = bgData.listitemCardOpacity   ?? 0.45;
       const listitemBorderOpacity = bgData.listitemBorderOpacity ?? 0.08;
       const listitemRadius = bgData.listitemRadius  ?? 6;
@@ -767,6 +767,8 @@ var plugins = (() => {
       const sidebarRgb = getBaseRgb("--color-bg-800", "#181825");
       const cmdpalRgb  = getBaseRgb("--color-bg-700", "#1e1e2e");
       const cardsRgb   = getBaseRgb("--color-bg-800", "#181825");
+      const seamOpacity = Math.min(0.2, Math.max(0.06, panelOpacity * 0.18));
+      const globalTintOpacity = Math.min(0.96, Math.max(0.08, panelOpacity));
       const blur = (px) => px > 0 ? `blur(${px}px)` : "none";
       const bgImageCSS = url ? `url("${url}") ${repeat} ${position} / ${size} fixed` : "";
 
@@ -788,6 +790,9 @@ var plugins = (() => {
         html, body {
           background: transparent !important;
         }
+        body {
+          position: relative !important;
+        }
         ${url ? `
         body::before {
           content: '' !important;
@@ -797,6 +802,14 @@ var plugins = (() => {
           background: url("${url}") ${repeat} ${position} / ${size} !important;
           pointer-events: none !important;
         }` : ""}
+        body::after {
+          content: '' !important;
+          position: fixed !important;
+          inset: 0 !important;
+          z-index: -9998 !important;
+          background: rgba(${panelRgb}, ${globalTintOpacity}) !important;
+          pointer-events: none !important;
+        }
         /* Make app containers transparent so background shows through */
         .app,
         #app,
@@ -807,22 +820,17 @@ var plugins = (() => {
           column-gap: 0 !important;
           row-gap: 0 !important;
         }
-        /* Cadence / inline datepicker: keep time controls in a vertical flow so rows do not overlap */
-        .cmdpal--inline .id--datepicker .datepicker-wrapper,
-        .cmdpal--inline.cadence-datepicker-popup .id--datepicker .datepicker-wrapper {
-          display: flex !important;
-          flex-direction: column !important;
-          align-items: stretch !important;
-          gap: 10px !important;
-        }
+        /* Cadence datepicker overrides disabled for now (can cause duplicate/double calendar rendering).
+           Future fix should live in Cadence plugin CSS with precise selectors. */
 
         /* Panel tint: direct background on panel-body — safe, no stacking context */
         .panel-body {
-          background: rgba(${panelRgb}, ${panelOpacity}) !important;
+          background: transparent !important;
         }
         /* panel-normal: completely clean — no stacking context properties at all */
         .panel-normal {
           background: transparent !important;
+          border: 1px solid rgba(255,255,255,0.05) !important;
         }
         /* Panel blur applied to body::before via filter.
            No transform used — transform creates a containing block in Chromium
@@ -844,7 +852,7 @@ var plugins = (() => {
         .panel-bar,
         .panel-bar--tabs,
         .panel-bar--tabsbar {
-          background: rgba(${panelRgb}, ${panelOpacity}) !important;
+          background: transparent !important;
         }
         .banner-container,
         .banner-outer,
@@ -865,8 +873,8 @@ var plugins = (() => {
         .panel-sizer,
         [class*="-sizer"],
         [class*="-sizer-handle"] {
-          background: transparent !important;
-          background-color: transparent !important;
+          background: rgba(${panelRgb}, ${seamOpacity}) !important;
+          background-color: rgba(${panelRgb}, ${seamOpacity}) !important;
           border: none !important;
           box-shadow: none !important;
           backdrop-filter: none !important;
@@ -908,7 +916,7 @@ var plugins = (() => {
 
         /* Sidebar — uses same opacity as master transparency slider */
         .sidebar {
-          background: rgba(${sidebarRgb}, ${panelOpacity}) !important;
+          background: transparent !important;
           position: relative !important;
         }
         /* Toggler arrow — must have explicit position to show above sidebar bg */
@@ -928,13 +936,28 @@ var plugins = (() => {
           left: 50% !important;
           transform: translate(-50%, -50%) !important;
         }
+        /* Plugin/settings cards and dialog content: apply frosted surfaces instead of opaque dark blocks */
+        .plugin-item,
+        .plugins-list .plugin-item,
+        .modal-tab-body .plugin-item,
+        .panel-dialog-body .plugin-item,
+        #id--global-content .plugin-item,
+        .modal-tab-body,
+        .panel-dialog-body,
+        .id--body,
+        .id--main {
+          background: rgba(${panelRgb}, ${pluginCardsOpacity}) !important;
+          border-color: rgba(255,255,255,0.10) !important;
+          backdrop-filter: ${blur(Math.max(panelBlur, 10))} !important;
+          -webkit-backdrop-filter: ${blur(Math.max(panelBlur, 10))} !important;
+        }
         .collection-card, .kanban-card {
-          background: rgba(${cardsRgb}, ${cardsOpacity}) !important;
+          background: rgba(${cardsRgb}, ${Math.max(0.05, cardsOpacity * 0.2)}) !important;
           backdrop-filter: ${blur(cardBlur)};
           -webkit-backdrop-filter: ${blur(cardBlur)};
         }
         .modal, .toaster {
-          background: rgba(${panelRgb}, ${modalOpacity}) !important;
+          background: rgba(${panelRgb}, ${Math.max(0.18, modalOpacity * 0.55)}) !important;
         }
         ${listitemCSS}
 
@@ -1277,10 +1300,9 @@ var plugins = (() => {
       const sliders = [
         { id: "panel-opacity", key: "panelOpacity", unit: "" },
         { id: "cmdpal-opacity", key: "cmdpalOpacity", unit: "" },
+        { id: "plugin-cards-opacity", key: "pluginCardsOpacity", unit: "" },
         { id: "panel-blur", key: "panelBlur", unit: "px" },
         { id: "sidebar-blur", key: "sidebarBlur", unit: "px" },
-        { id: "card-blur", key: "cardBlur", unit: "px" },
-        { id: "listitem-blur", key: "listitemBlur", unit: "px" },
         { id: "listitem-card-opacity", key: "listitemCardOpacity", unit: "" },
         { id: "listitem-border-opacity", key: "listitemBorderOpacity", unit: "" },
       ];
@@ -1721,13 +1743,14 @@ var plugins = (() => {
       const panelOpacity   = get("panel-opacity")   ?? 0.85;
       const sidebarOpacity = panelOpacity;  // master slider
       const cmdpalOpacity  = get("cmdpal-opacity")   ?? 0.92;
+      const pluginCardsOpacity = get("plugin-cards-opacity") ?? 0.24;
       const cardsOpacity   = panelOpacity;
       const inputOpacity   = panelOpacity;
       const modalOpacity   = panelOpacity;
       const panelBlur      = get("panel-blur")       ?? 0;
       const sidebarBlur    = get("sidebar-blur")     ?? 0;
-      const cardBlur       = get("card-blur")        ?? 0;
-      const listitemBlur   = get("listitem-blur")    ?? 0;
+      const cardBlur       = 0;
+      const listitemBlur   = 0;
       const listitemCardOpacity   = get("listitem-card-opacity")   ?? 0.45;
       const listitemBorderOpacity = get("listitem-border-opacity") ?? 0.08;
       const listitemRadius = get("listitem-radius")  ?? 6;
@@ -1771,7 +1794,7 @@ var plugins = (() => {
         dataUrl:               this._currentBgDataUrl || this.loadBgData().dataUrl || "",
         size, position, repeat,
         cardsEnabled,
-        panelOpacity, sidebarOpacity, cmdpalOpacity, cardsOpacity,
+        panelOpacity, sidebarOpacity, cmdpalOpacity, pluginCardsOpacity, cardsOpacity,
 
         modalOpacity, panelBlur, sidebarBlur, cardBlur, listitemBlur,
         listitemCardOpacity, listitemBorderOpacity, listitemRadius,
@@ -1865,10 +1888,11 @@ var plugins = (() => {
         cardsEnabled:          get("listitem-cards-enabled") ?? existing.cardsEnabled ?? false,
         panelOpacity:          getFloat("panel-opacity", existing.panelOpacity ?? 0.85),
         cmdpalOpacity:         getFloat("cmdpal-opacity", existing.cmdpalOpacity ?? 0.92),
+        pluginCardsOpacity:    getFloat("plugin-cards-opacity", existing.pluginCardsOpacity ?? 0.24),
         panelBlur:             getFloat("panel-blur", existing.panelBlur ?? 0),
         sidebarBlur:           getFloat("sidebar-blur", existing.sidebarBlur ?? 0),
-        cardBlur:              getFloat("card-blur", existing.cardBlur ?? 0),
-        listitemBlur:          getFloat("listitem-blur", existing.listitemBlur ?? 0),
+        cardBlur:              0,
+        listitemBlur:          0,
         listitemCardOpacity:   getFloat("listitem-card-opacity", existing.listitemCardOpacity ?? 0.45),
         listitemBorderOpacity: getFloat("listitem-border-opacity", existing.listitemBorderOpacity ?? 0.08),
         listitemRadius:        getFloat("listitem-radius", existing.listitemRadius ?? 6),
