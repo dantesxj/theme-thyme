@@ -744,7 +744,10 @@ var plugins = (() => {
       const pluginCardsOpacity = bgData.pluginCardsOpacity ?? 0.24;
       const cardsOpacity   = panelOpacity;
       const modalOpacity   = panelOpacity;
-      const panelBlur      = bgData.panelBlur       ?? 0;
+      const panelBlurRaw   = bgData.panelBlur       ?? 0;
+      const panelBlur      = Math.max(0, Math.min(10, Number(panelBlurRaw) || 0));
+      const cmdpalBlur     = panelBlur > 0 ? Math.min(8, panelBlur) : 0;
+      const cardSurfaceBlur = panelBlur > 0 ? Math.min(10, panelBlur) : 0;
       const cardBlur       = 0;
       const listitemBlur   = 0;
       const listitemCardOpacity   = bgData.listitemCardOpacity   ?? 0.45;
@@ -929,8 +932,8 @@ var plugins = (() => {
         }
         .cmdpal--dialog {
           background: rgba(${cmdpalRgb}, ${cmdpalOpacity}) !important;
-          backdrop-filter: ${blur(Math.max(panelBlur, 8))};
-          -webkit-backdrop-filter: ${blur(Math.max(panelBlur, 8))};
+          backdrop-filter: ${blur(cmdpalBlur)};
+          -webkit-backdrop-filter: ${blur(cmdpalBlur)};
           position: fixed !important;
           top: 50% !important;
           left: 50% !important;
@@ -948,8 +951,8 @@ var plugins = (() => {
         .id--main {
           background: rgba(${panelRgb}, ${pluginCardsOpacity}) !important;
           border-color: rgba(255,255,255,0.10) !important;
-          backdrop-filter: ${blur(Math.max(panelBlur, 10))} !important;
-          -webkit-backdrop-filter: ${blur(Math.max(panelBlur, 10))} !important;
+          backdrop-filter: ${blur(cardSurfaceBlur)} !important;
+          -webkit-backdrop-filter: ${blur(cardSurfaceBlur)} !important;
         }
         .collection-card, .kanban-card {
           background: rgba(${cardsRgb}, ${Math.max(0.05, cardsOpacity * 0.2)}) !important;
@@ -1001,8 +1004,8 @@ var plugins = (() => {
           margin-top: 16px !important;
         }
         .tlr-sort-menu {
-          backdrop-filter: ${blur(Math.max(panelBlur, 8))} !important;
-          -webkit-backdrop-filter: ${blur(Math.max(panelBlur, 8))} !important;
+          backdrop-filter: ${blur(cmdpalBlur)} !important;
+          -webkit-backdrop-filter: ${blur(cmdpalBlur)} !important;
           border-radius: 10px !important;
         }
         .tlr-search-wrap {
