@@ -4,18 +4,38 @@ import { presetThemes } from "./presetThemes";
 export class Plugin extends AppPlugin {
     STORAGE_KEY: string = "theme-architect-raw-css";
 
+    private _statusBarItem: ReturnType<UIAPI["addStatusBarItem"]> | null = null;
+    private _cmdOpenEditor: ReturnType<UIAPI["addCommandPaletteCommand"]> | null =
+        null;
+
     onLoad() {
-        this.ui.addSidebarItem({
-            label: "Theme Architect",
+        this._statusBarItem =
+            this.ui.addStatusBarItem?.({
+                icon: "analyze",
+                tooltip: "Theme Architect — live theme editor",
+                onClick: () => {
+                    void this.createAndNavigateToNewPanel();
+                },
+            }) ?? null;
+        this._cmdOpenEditor = this.ui.addCommandPaletteCommand({
+            label: "Theme Architect: Open editor",
             icon: "analyze",
-            tooltip: "Live CSS Editor",
-            onClick: () => {
-                this.createAndNavigateToNewPanel();
+            onSelected: () => {
+                void this.createAndNavigateToNewPanel();
             },
         });
     }
 
     onUnload() {
+        try {
+            this._statusBarItem?.remove?.();
+        } catch (_) {}
+        try {
+            this._cmdOpenEditor?.remove?.();
+        } catch (_) {}
+        this._statusBarItem = null;
+        this._cmdOpenEditor = null;
+
         const panel = this.ui.getActivePanel();
         const element = panel?.getElement();
         const cssInput = element?.querySelector(

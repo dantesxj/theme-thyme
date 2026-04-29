@@ -4,7 +4,7 @@
 	"icon": "analyze",
 	"item_name": "Note",
 	"description": "Manage Live Themes in Thymer!",
-	"show_sidebar_items": true,
+	"show_sidebar_items": false,
 	"show_cmdpal_items": true,
 	"views": [],
 	"fields": [],

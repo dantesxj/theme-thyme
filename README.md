@@ -21,7 +21,7 @@ Theme Architect is a live CSS editor for Thymer. It helps you preview color-vari
 
 ## Usage
 
-- Open **Theme Architect** from the sidebar
+- Open **Theme Architect** from the **status bar** (bottom): click the same **analyze** icon, or use the command palette (**Theme Architect: Open editor**)
 - Select a preset or edit variables directly
 - Click **PREVIEW** to apply your current theme
 - Click **COPY CSS** to export your final theme block
