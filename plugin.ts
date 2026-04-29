@@ -1,3 +1,4 @@
+/* Dev / esbuild entry only — do NOT paste into Thymer (uses import/export). Ship: latest-release/plugin.ts */
 import { HTML_LAYOUT } from "./PanelForm";
 import { presetThemes } from "./presetThemes";
 

@@ -29,11 +29,17 @@ Theme Architect is a live CSS editor for Thymer. It helps you preview color-vari
 ## Install (from `latest-release`)
 
 1. Open Thymer, then open the Plugins screen (`Cmd/Ctrl + P` and search `Plugins`)
-2. Choose **Create Plugin**
-3. Copy `latest-release/plugin.json` into the plugin configuration tab
-4. Copy `latest-release/plugin.ts` into the custom code tab  
-   (this file is the bundled runtime artifact used for install)
+2. Choose **Create Plugin** (or edit your existing Theme Architect plugin)
+3. Copy **`latest-release/plugin.json`** into the plugin **configuration** tab
+4. Copy **`latest-release/plugin.ts`** into the **custom code** tab (one bundled script — no `import` / `export` at the top)
 5. Preview, then save
+
+### If you see `Cannot use import statement outside a module`
+
+Thymer runs custom code as a normal script, not an ES module. You almost certainly pasted the **wrong file**:
+
+- **Use:** `latest-release/plugin.ts` (starts with `// @generated` … embedded runtime, then an IIFE bundle).
+- **Do not use:** the repo-root **`plugin.ts`** (starts with `import { HTML_LAYOUT }` …). That file is only for `npm run build` / hot reload; esbuild turns it into a single file for Thymer.
 
 ## Credits
 
