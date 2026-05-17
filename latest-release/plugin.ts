@@ -772,12 +772,66 @@
     return false;
   }
 
+  /** Parse ISO-ish timestamps for vault row scoring (duplicates: pick freshest, not first in list). */
+  function parseVaultIsoMs(s) {
+    const n = Date.parse(String(s || ''));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function vaultRowFreshnessScore(r) {
+    let score = 0;
+    let raw = '';
+    try {
+      raw = rowField(r, 'settings_json');
+    } catch (_) {}
+    if (raw && String(raw).trim()) {
+      try {
+        const j = JSON.parse(raw);
+        if (j && typeof j.updatedAt === 'string') {
+          const ms = parseVaultIsoMs(j.updatedAt);
+          if (ms > score) score = ms;
+        }
+      } catch (_) {}
+    }
+    try {
+      const ua = rowField(r, 'updated_at');
+      if (ua) {
+        const ms = parseVaultIsoMs(ua);
+        if (ms > score) score = ms;
+      }
+    } catch (_) {}
+    return score;
+  }
+
+  function settingsJsonPayloadLen(r) {
+    try {
+      return String(rowField(r, 'settings_json') || '').length;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /**
+   * Prefer the **newest** vault row when duplicates exist (same `plugin_id`, multiple vault-shaped rows).
+   * Previously the first list match could be stale while a newer row held the real payload.
+   */
   function findVaultRecord(records, pluginId) {
     if (!records) return null;
+    let best = null;
+    let bestScore = -1;
     for (const x of records) {
-      if (isVaultRow(x, pluginId)) return x;
+      if (!isVaultRow(x, pluginId)) continue;
+      const sc = vaultRowFreshnessScore(x);
+      if (sc > bestScore) {
+        bestScore = sc;
+        best = x;
+      } else if (sc === bestScore && best) {
+        const lenX = settingsJsonPayloadLen(x);
+        const lenB = settingsJsonPayloadLen(best);
+        if (lenX > lenB) best = x;
+      }
     }
-    return null;
+    return best;
   }
 
   function applyVaultRowMeta(r, pluginId, coll) {
@@ -2315,6 +2369,20 @@ var plugins = (() => {
                 <div style="padding:6px 0 2px;font-size:11px;color:var(--text-muted);opacity:0.6;">Sidebar blur disabled (CSS limitation — breaks menus)</div>
             </div>
 
+            <!-- Geometry / roundness (safe subset — no animation or scrollbar overrides) -->
+            <div style="background: var(--color-bg-800); border: 1px solid var(--color-bg-400); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 10px;">
+                <label style="font-size: 9px; font-weight: bold; color: var(--color-text-500); text-transform: uppercase; letter-spacing: 1px;">Geometry &amp; roundness</label>
+                <p style="font-size: 10px; color: var(--color-text-700); margin: 0;">Scales corner radii across the app. 1× is the Theme Architect default curve. Does not load web fonts, hide scrollbars, or change motion.</p>
+                <div style="width: 100%;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <label for="roundness-scale" style="font-size: 9px; color: var(--color-text-500); text-transform: uppercase; letter-spacing: 0.5px;">Corner roundness</label>
+                        <span id="roundness-scale-val" style="font-size: 10px; color: var(--color-primary-400); font-variant-numeric: tabular-nums;">1.00×</span>
+                    </div>
+                    <input type="range" id="roundness-scale" min="0" max="2" step="0.05" value="1"
+                        style="width: 100%; accent-color: var(--color-primary-400); cursor: pointer; height: 4px;">
+                </div>
+            </div>
+
         </div>
 
         <!-- Live Style Painter -->
@@ -2517,6 +2585,166 @@ var plugins = (() => {
       } catch (_) {}
     }
 
+    /**
+     * Scaled corner radii + a small set of structural overrides (no transforms,
+     * no animation changes, no scrollbar hiding). `scale` 0–2, default 1.
+     */
+    __taBuildGeometryCSS(rawScale) {
+      const s = Math.max(
+        0,
+        Math.min(
+          2,
+          rawScale == null || Number.isNaN(Number(rawScale)) ? 1 : Number(rawScale)
+        )
+      );
+      return `
+/* Theme Architect — geometry (roundness ×${s}) */
+html {
+  --ta-roundness-scale: ${s};
+  --radius-normal: max(2px, calc(7px * var(--ta-roundness-scale)));
+  --radius-larger: max(2px, calc(11px * var(--ta-roundness-scale)));
+  --radius-xlarge: max(2px, calc(14px * var(--ta-roundness-scale)));
+  --button-radius: max(2px, calc(9px * var(--ta-roundness-scale)));
+  --modal-radius: max(2px, calc(14px * var(--ta-roundness-scale)));
+  --ed-checkbox-radius: max(2px, calc(5px * var(--ta-roundness-scale)));
+  --ed-radius-normal: max(2px, calc(7px * var(--ta-roundness-scale)));
+  --ed-radius-block: max(2px, calc(13px * var(--ta-roundness-scale)));
+  --ta-option-radius: max(2px, calc(13px * var(--ta-roundness-scale)));
+  --ta-kbd-radius: max(2px, calc(8px * var(--ta-roundness-scale)));
+  --ta-image-radius: max(2px, calc(20px * var(--ta-roundness-scale)));
+  --ta-form-radius: max(2px, calc(12px * var(--ta-roundness-scale)));
+  --ta-button-group-radius: max(2px, calc(17px * var(--ta-roundness-scale)));
+  --ta-icon-btn-radius: max(2px, calc(8px * var(--ta-roundness-scale)));
+  --ta-thumb-radius: max(2px, calc(12px * var(--ta-roundness-scale)));
+  --scrollbar-radius: max(2px, calc(4px * var(--ta-roundness-scale)));
+}
+html .cmdpal--dialog,
+html .cmdpal--inline {
+  border-radius: var(--modal-radius) !important;
+}
+html .autocomplete--option,
+html .vscroll-node .autocomplete--option,
+html .dlg-workspace-item {
+  border-radius: var(--ta-option-radius) !important;
+}
+html .autocomplete--kbd,
+html .kbd,
+html .statusbar--kbd {
+  border-radius: var(--ta-kbd-radius) !important;
+}
+html .panel-tab--thumb {
+  border-radius: var(--ta-thumb-radius) !important;
+}
+html .button,
+html .button-normal,
+html .button-minimal,
+html .button-primary {
+  border-radius: var(--button-radius) !important;
+}
+html .button-group {
+  border-radius: var(--ta-button-group-radius) !important;
+}
+html .button-group .button-minimal,
+html .view-button,
+html .statusbar--item-hoverable {
+  border-radius: var(--ta-thumb-radius) !important;
+}
+html .panel-icon-button,
+html .panel-bar--crumbnav-icon,
+html .chat-img-delete-btn {
+  border-radius: var(--ta-icon-btn-radius) !important;
+}
+html .sidebar-item,
+html .sidebar-item-hoverable {
+  border-radius: var(--ta-option-radius) !important;
+}
+html input.form-input,
+html select.form-input,
+html textarea.form-input {
+  border-radius: var(--ta-form-radius) !important;
+}
+html .line-check-div {
+  border-radius: max(2px, calc(6px * var(--ta-roundness-scale))) !important;
+}
+html input[type="range"] {
+  border-radius: max(2px, calc(6px * var(--ta-roundness-scale))) !important;
+}
+html input[type="range"]::-webkit-slider-runnable-track {
+  border-radius: max(2px, calc(6px * var(--ta-roundness-scale))) !important;
+}
+html input[type="range"]::-webkit-slider-thumb {
+  border-radius: max(2px, calc(6px * var(--ta-roundness-scale))) !important;
+}
+html .img_large_container img,
+html .gallery-view-card-banner-img,
+html .messageItem img {
+  border-radius: var(--ta-image-radius) !important;
+}
+html .board-card,
+html .gallery-view-card,
+html .page-props-row,
+html .table-view-row {
+  border-radius: var(--ta-option-radius) !important;
+}
+html .lineitem-hashtag,
+html .lineitem-backlink-pill,
+html .lineitem-ref {
+  border-radius: max(2px, calc(9px * var(--ta-roundness-scale))) !important;
+}
+html .tooltip-element {
+  border-radius: max(2px, calc(12px * var(--ta-roundness-scale))) !important;
+}
+html .lineitem-code,
+html code {
+  border-radius: var(--ed-radius-normal) !important;
+}
+html .block-container-div.block-codelang > .listitem,
+html .terminal-bash-block {
+  border-radius: var(--ed-radius-block) !important;
+}
+html .link-menu,
+html .toaster,
+html .modal-dialog-has-border {
+  border-radius: var(--modal-radius) !important;
+}
+html .board-column {
+  border-radius: var(--radius-xlarge) !important;
+}
+html .board-card-create {
+  border-radius: var(--radius-larger) !important;
+}
+html .listitem-folded .lineitem-btn-unfold {
+  border-radius: max(2px, calc(8px * var(--ta-roundness-scale))) !important;
+}
+html .prop-multi-values,
+html .page-props-cell {
+  border-radius: max(2px, calc(8px * var(--ta-roundness-scale))) !important;
+}
+html .prop-status-record,
+html .prop-status,
+html [class*="prop-status"],
+html .prop-multi-values .prop-status-record,
+html .page-props-cell .prop-status-record {
+  border-radius: 999px !important;
+}
+html .tlr-footer {
+  border-radius: max(2px, calc(8px * var(--ta-roundness-scale))) !important;
+}
+html .tlr-sort-menu {
+  border-radius: max(2px, calc(10px * var(--ta-roundness-scale))) !important;
+}
+html .tlr-search-wrap {
+  border-radius: max(2px, calc(8px * var(--ta-roundness-scale))) !important;
+}
+html .vscrollbar-thumb {
+  border-radius: var(--scrollbar-radius) !important;
+}
+html .hscrollbar-thumb {
+  border-radius: var(--scrollbar-radius) !important;
+}
+`;
+    }
+
     // Called on load and whenever settings change — uses injectCSS so it survives navigation
     _applyPersistedTransparencyCSS() {
       const bgData = this.loadBgData();
@@ -2543,6 +2771,7 @@ var plugins = (() => {
       const listitemRadius = bgData.listitemRadius  ?? 6;
       const cardsEnabled   = bgData.cardsEnabled    === true;
       const hideDesktopTitleBar = bgData.hideDesktopTitleBar === true;
+      const roundnessScale = bgData.roundnessScale ?? 1;
 
       const root = document.documentElement;
       const getBaseRgb = (varName, fallback) => {
@@ -2821,7 +3050,8 @@ var plugins = (() => {
       if (this._injectedCssHandle) {
         try { this._injectedCssHandle.remove(); } catch(e) {}
       }
-      this._injectedCssHandle = this.ui.injectCSS(css + titleBarChromeCSS);
+      const geometryCSS = this.__taBuildGeometryCSS(roundnessScale);
+      this._injectedCssHandle = this.ui.injectCSS(css + titleBarChromeCSS + geometryCSS);
     }
 
     async createAndNavigateToNewPanel() {
@@ -3112,6 +3342,20 @@ var plugins = (() => {
           this.applyAllTransparency(container);
         });
       });
+
+      const roundnessEl = container.querySelector("#roundness-scale");
+      const roundnessVal = container.querySelector("#roundness-scale-val");
+      const fmtRoundness = (v) => `${Number(v).toFixed(2)}×`;
+      if (roundnessEl) {
+        if (bgData.roundnessScale !== undefined && bgData.roundnessScale !== null && !Number.isNaN(Number(bgData.roundnessScale))) {
+          roundnessEl.value = String(bgData.roundnessScale);
+          if (roundnessVal) roundnessVal.textContent = fmtRoundness(bgData.roundnessScale);
+        }
+        roundnessEl.addEventListener("input", () => {
+          if (roundnessVal) roundnessVal.textContent = fmtRoundness(roundnessEl.value);
+          this.applyAllTransparency(container);
+        });
+      }
 
       // Radius slider
       const radiusEl = container.querySelector("#listitem-radius");
@@ -3547,6 +3791,8 @@ var plugins = (() => {
       const listitemRadius = get("listitem-radius")  ?? 6;
       const cardsEnabled   = getBool("listitem-cards-enabled");
       const hideDesktopTitleBar = getBool("desktop-hide-titlebar");
+      const rsRaw = get("roundness-scale");
+      const roundnessScale = Number.isFinite(rsRaw) ? Math.max(0, Math.min(2, rsRaw)) : 1;
 
       // Background image — injected directly into each surface via CSS
       // so it shows through regardless of Thymer's own body/html background
@@ -3590,6 +3836,7 @@ var plugins = (() => {
         modalOpacity, panelBlur, sidebarBlur, cardBlur, listitemBlur,
         listitemCardOpacity, listitemBorderOpacity, listitemRadius,
         hideDesktopTitleBar,
+        roundnessScale,
       };
       try {
         localStorage.setItem(STORAGE_KEY_BG, JSON.stringify(dataToSave));
@@ -3604,9 +3851,21 @@ var plugins = (() => {
     }
 
     buildTransparencyCSS(container, themeName) {
-      // Returns transparency-related CSS to append to the copy export
-      // This is a best-effort export — the dynamic injection works better live
-      return `\n  /* Transparency — set live via Theme Architect */\n`;
+      let r = null;
+      try {
+        const bg = JSON.parse(localStorage.getItem(STORAGE_KEY_BG) || "null");
+        if (bg && Number.isFinite(bg.roundnessScale))
+          r = Math.max(0, Math.min(2, bg.roundnessScale));
+      } catch (_) {}
+      const rsEl = container?.querySelector?.("#roundness-scale");
+      if (rsEl) {
+        const v = parseFloat(rsEl.value);
+        if (Number.isFinite(v)) r = Math.max(0, Math.min(2, v));
+      }
+      const geom = r != null
+        ? `  /* Theme Architect — corner roundness ${r}× (matches Geometry slider; full rules are injected by the plugin) */\n  --ta-roundness-scale: ${r};\n`
+        : `  /* Theme Architect: corner roundness lives in saved background settings when the editor is used. */\n`;
+      return `\n  /* Transparency — set live via Theme Architect */\n${geom}`;
     }
 
     // ─── Persistence ──────────────────────────────────────────────────────────
@@ -3688,6 +3947,7 @@ var plugins = (() => {
         listitemBorderOpacity: getFloat("listitem-border-opacity", existing.listitemBorderOpacity ?? 0.08),
         listitemRadius:        getFloat("listitem-radius", existing.listitemRadius ?? 6),
         hideDesktopTitleBar:   get("desktop-hide-titlebar") ?? existing.hideDesktopTitleBar ?? false,
+        roundnessScale:        getFloat("roundness-scale", existing.roundnessScale ?? 1),
       };
       try {
         localStorage.setItem(STORAGE_KEY_BG, JSON.stringify(data));
